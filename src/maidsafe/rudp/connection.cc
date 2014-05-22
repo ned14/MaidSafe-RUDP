@@ -85,7 +85,8 @@ Connection::Connection(const std::shared_ptr<Transport>& transport,
       timeout_state_(TimeoutState::kConnecting),
       sending_(false),
       failure_functor_(),
-      send_queue_() {
+      send_queue_(),
+      handle_tick_lock_() {
   static_assert((sizeof(DataSize)) == 4, "DataSize must be 4 bytes.");
   timer_.expires_from_now(bptime::pos_infin);
 }
@@ -269,7 +270,11 @@ void Connection::CheckTimeout(const bs::error_code& ec) {
       strand_.wrap(std::bind(&Connection::CheckTimeout, shared_from_this(), args::_1)));
 }
 
+// May return true if connection still being gracefully closed down
 bool Connection::Stopped() const { return (!transport_.lock() || !socket_.IsOpen()); }
+
+// Only returns true if connection is completely closed down and ticks stopped
+bool Connection::TicksStopped() const { return (!transport_.lock() && !socket_.IsOpen()); }
 
 void Connection::StartTick() {
   auto handler = strand_.wrap(std::bind(&Connection::HandleTick, shared_from_this()));
@@ -277,6 +282,15 @@ void Connection::StartTick() {
 }
 
 void Connection::HandleTick() {
+  // 2014-04-15 ned: We had a double free induced by two ticks calling
+  //                 DoClose simultaneously which should never happen as
+  //                 HandleTick is called by strand_, so we assert under
+  //                 debug and let the mutex serialise in release.
+  bool have_lock = handle_tick_lock_.try_lock();
+  assert(have_lock);  // If this fails it's because another HandleTick is running (bad)
+  if (!have_lock) handle_tick_lock_.lock();  // For release builds
+  std::unique_lock<decltype(handle_tick_lock_)> lock(handle_tick_lock_, std::adopt_lock);
+
   if (!socket_.IsOpen())
     return DoClose();
 

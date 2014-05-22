@@ -204,7 +204,7 @@ int ManagedConnections::AttemptStartNewTransport(const std::vector<Endpoint>& bo
 
 bool ManagedConnections::StartNewTransport(NodeIdEndpointPairs bootstrap_peers,
                                            Endpoint local_endpoint) {
-  TransportPtr transport(new detail::Transport(asio_service_, nat_type_));
+  TransportPtr transport(std::make_shared<detail::Transport>(asio_service_, nat_type_));
   bool bootstrap_off_existing_connection(bootstrap_peers.empty());
   boost::asio::ip::address external_address;
   if (bootstrap_off_existing_connection)
@@ -220,7 +220,7 @@ bool ManagedConnections::StartNewTransport(NodeIdEndpointPairs bootstrap_peers,
            bootstrap_off_existing_connection,
            std::bind(&ManagedConnections::OnMessageSlot, this, args::_1),
            [this](const NodeId & peer_id, TransportPtr transport, bool temporary_connection,
-                  bool & is_duplicate_normal_connection) {
+                  std::atomic<bool> & is_duplicate_normal_connection) {
              OnConnectionAddedSlot(peer_id, transport, temporary_connection,
                                    is_duplicate_normal_connection);
            },
@@ -664,7 +664,7 @@ void ManagedConnections::OnMessageSlot(const std::string& message) {
 
 void ManagedConnections::OnConnectionAddedSlot(const NodeId& peer_id, TransportPtr transport,
                                                bool temporary_connection,
-                                               bool& is_duplicate_normal_connection) {
+                                               std::atomic<bool> & is_duplicate_normal_connection) {
   is_duplicate_normal_connection = false;
   std::lock_guard<std::mutex> lock(mutex_);
 
