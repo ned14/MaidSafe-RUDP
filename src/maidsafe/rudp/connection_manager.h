@@ -133,14 +133,14 @@ class ConnectionManager {
 
   // Because the connections can be in an idle state with no pending async operations, they are kept
   // alive with a shared_ptr in this set, as well as in the async operation handlers.
-  ConnectionGroup connections_;
-  mutable std::mutex mutex_;
-  std::weak_ptr<Transport> transport_;
-  boost::asio::io_service::strand strand_;
-  std::shared_ptr<Multiplexer> multiplexer_;
-  const NodeId kThisNodeId_;
+  ConnectionGroup                   connections_;
+  mutable std::mutex                mutex_;
+  std::weak_ptr<Transport>          transport_;
+  boost::asio::io_service::strand   strand_;
+  std::shared_ptr<Multiplexer>      multiplexer_;
+  const NodeId                      kThisNodeId_;
   std::shared_ptr<asymm::PublicKey> this_public_key_;
-  SocketMap sockets_;
+  SocketMap                         sockets_;
 };
 
 }  // namespace detail

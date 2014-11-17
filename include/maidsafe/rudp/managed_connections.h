@@ -215,20 +215,26 @@ class ManagedConnections {
  private:
   std::string DebugString() const;
 
-  AsioService asio_service_;
-  std::mutex callback_mutex_;
-  MessageReceivedFunctor message_received_functor_;
-  ConnectionLostFunctor connection_lost_functor_;
-  ConnectionAddedFunctor connection_added_functor_;
-  NodeId this_node_id_, chosen_bootstrap_node_id_;
+  AsioService                  asio_service_;
+  std::mutex                   callback_mutex_;
+  mutable std::mutex           mutex_;
+
+  MessageReceivedFunctor       message_received_functor_;
+  ConnectionLostFunctor        connection_lost_functor_;
+  ConnectionAddedFunctor       connection_added_functor_;
+
+  NodeId                       this_node_id_,
+                               chosen_bootstrap_node_id_;
+
   std::shared_ptr<asymm::PrivateKey> private_key_;
-  std::shared_ptr<asymm::PublicKey> public_key_;
-  ConnectionMap connections_;
+  std::shared_ptr<asymm::PublicKey>  public_key_;
+
+  ConnectionMap                                   connections_;
   std::vector<std::unique_ptr<PendingConnection>> pendings_;
-  std::set<TransportPtr> idle_transports_;
-  mutable std::mutex mutex_;
-  boost::asio::ip::address local_ip_;
-  NatType nat_type_;
+  std::set<TransportPtr>                          idle_transports_;
+
+  boost::asio::ip::address      local_ip_;
+  NatType                       nat_type_;
 };
 
 }  // namespace rudp

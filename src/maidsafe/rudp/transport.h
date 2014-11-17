@@ -129,7 +129,8 @@ class Transport : public std::enable_shared_from_this<Transport> {
   Transport(const Transport&);
   Transport& operator=(const Transport&);
 
-  typedef std::shared_ptr<Multiplexer> MultiplexerPtr;
+  typedef std::shared_ptr<Multiplexer>       MultiplexerPtr;
+  typedef std::shared_ptr<ConnectionManager> ConnectionManagerPtr;
 
   template<class Handler>
   void TryBootstrapping(const IdEndpointPairs& bootstrap_peers,
@@ -167,12 +168,12 @@ class Transport : public std::enable_shared_from_this<Transport> {
   OnConnect MakeDefaultOnConnectHandler();
 
  private:
-  AsioService&                       asio_service_;
-  NatType&                           nat_type_;
-  boost::asio::io_service::strand    strand_;
-  MultiplexerPtr                     multiplexer_;
-  std::unique_ptr<ConnectionManager> connection_manager_;
-  std::mutex                         callback_mutex_;
+  AsioService&                    asio_service_;
+  NatType&                        nat_type_;
+  boost::asio::io_service::strand strand_;
+  MultiplexerPtr                  multiplexer_;
+  ConnectionManagerPtr            connection_manager_;
+  std::mutex                      callback_mutex_;
 
   OnMessage         on_message_;
   OnConnectionAdded on_connection_added_;

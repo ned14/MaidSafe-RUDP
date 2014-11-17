@@ -94,6 +94,7 @@ ManagedConnections::PendingConnection::PendingConnection(NodeId node_id_in, Tran
 ManagedConnections::ManagedConnections()
     : asio_service_(Parameters::thread_count),
       callback_mutex_(),
+      mutex_(),
       message_received_functor_(),
       connection_lost_functor_(),
       this_node_id_(),
@@ -103,7 +104,6 @@ ManagedConnections::ManagedConnections()
       connections_(),
       pendings_(),
       idle_transports_(),
-      mutex_(),
       local_ip_(),
       nat_type_(NatType::kUnknown) {}
 
